@@ -1,0 +1,112 @@
+<html>
+<head>
+    <title>ol_图形绘制_多种图形</title>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/build/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/css/ol.css">
+</head>
+<body>
+<div id="map"></div>
+<div id="menu" style="margin-bottom: 10px">
+    <label>几何图形类型：&nbsp;</label>
+    <select id="type">
+        <option value="None">无</option>
+        <option value="Point">点</option>
+        <option value="LineString">线</option>
+        <option value="Polygon">多边形</option>
+        <option value="Circle">圆</option>
+        <option value="Square">正方形</option>
+        <option value="Rectangle">长方形</option>
+    </select>
+</div>
+<script type="text/javascript">
+    //实例化Map对象，用于加载地图
+    var map = new ol.Map({
+        target: 'map', //地图容器div的id
+        //设置在地图容器中加载图层
+        layers: [
+            //加载瓦片图层
+            new ol.layer.Tile({
+                //图层对应的数据源，这里为加载OpenStreetMap在线瓦片服务数据
+                source: new ol.source.OSM()
+            })
+        ],
+        //地图视图设置
+        view: new ol.View({
+            center: [32, 113], //地图显示的初始中心
+            zoom: 2 //地图初始显示的级别
+        })
+    });
+    var typeSelect = document.getElementById('type');
+    var draw;
+    //实例化一个矢量图层Vector作为绘制层
+    var source = new ol.source.Vector();
+    var vectorLayer = new ol.layer.Vector({
+        source: source,
+        style: new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: 'rgba(255, 255, 255, 0.2)'
+            }),
+            stroke: new ol.style.Stroke({
+                color: '#ffcc33',
+                width:2
+            }),
+            image: new ol.style.Circle({
+                radius: 7,
+                fill: new ol.style.Fill({
+                    color: '#ffcc33'
+                })
+            })
+        })
+    });
+    map.addLayer(vectorLayer);
+    //用户更改绘制类型触发的事件
+    typeSelect.onchange = function (e) {
+        map.removeInteraction(draw);//移除绘制图形控件
+        addInteraction();//添加绘制图形控件
+    };
+    function addInteraction () {
+        var typeVale = typeSelect.value;
+        if(typeVale != 'None'){
+            var geometryFunction, maxPoints;
+            if(typeVale === 'Square'){
+                typeVale = 'Circle';
+                geometryFunction = ol.interaction.Draw.createRegularPolygon(4);
+            }
+            else if(typeVale === 'Rectangle'){
+                typeVale = 'LineString';
+                maxPoints = 2;
+                geometryFunction = function(coordinates, geometry){
+                    if(!geometry){
+                        geometry = new ol.geom.Polygon(null);
+                    }
+                    var start = coordinates[0];
+                    var end = coordinates[1];
+                    geometry.setCoordinates([
+                            [
+                                    start,
+                                    [start[0], start[1]],
+                                    end,
+                                    [end[0], end[1]],
+                                    start
+                            ]
+                    ]);
+                    return geometry;
+                }
+            };
+            console.log(typeVale);
+            draw = new ol.interaction.Draw({
+                source: source,
+                type: typeVale,
+                geometryFunction: geometryFunction,
+                maxPoints: maxPoints
+            });
+            map.addInteraction(draw);
+        }
+        else {
+            source.clear();
+        }
+    }
+</script>
+
+</body>
+</html>

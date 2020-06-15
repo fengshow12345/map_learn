@@ -1,0 +1,285 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>cesium_test_draw（点线面）</title>
+    <link rel="stylesheet" type="text/css" href="./Cesium/Widgets/widgets.css">
+    <style>
+        .tooltipdiv {
+            display: block;
+            position:absolute;
+            visibility:visible;
+            max-width:200px;
+            min-width:100px;
+            padding: 1px;
+            font-size: 11px;
+            z-index: 1000;
+            opacity: 0.8;
+            -khtml-opacity:0.8;
+            -moz-opacity:0.8;
+            filter:alpha(opacity=80);
+        }
+        .tooltipdiv-inner {
+            padding: 3px;
+            background-color:#000000;
+            color: white;
+            text-align:center;
+            max-width:200px;
+            text-decoration:none;
+            -webkit-border-radius:4px;
+            -moz-border-radius:4px;
+            border-radius:4px;
+        }
+    </style>
+    <script type="text/javascript" src="./Cesium/Cesium.js"></script>
+<body>
+<div style="z-index: 100; position: absolute">
+    <button onclick="draw_point()">point</button>
+    <button onclick="draw_line()">line</button>
+    <button onclick="draw_polygon()">polygon</button>
+</div>
+<div id="viewer" style="width:100%;height:100%"></div>
+<script type="text/javascript">
+
+    console.log(window);
+    var viewer = new Cesium.Viewer(document.getElementById('viewer'), {
+        imageryProvider: false,
+        baseLayerPicker: false,
+        timeline: false,
+        infoBox: false,
+        navigationHelpButton: false,
+        fullscreenButton: false,
+        animation: false,
+        geocoder: false,
+        homeButton: false,
+        sceneModePicker: false
+
+    });
+
+
+    var tianditu_vec_w_provider =  new Cesium.WebMapTileServiceImageryProvider({
+        url: "http://t0.tianditu.com/vec_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=vec&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=93d1fdef41f93d2211deed6d22780c48",
+        layer: "tdtVecBasicLayer",
+        style: "default",
+        format: "image/jpeg",
+        tileMatrixSetID: "GoogleMapsCompatible",
+        show: false
+    });
+    var layer_vec_w = new Cesium.ImageryLayer(tianditu_vec_w_provider);
+    var tianditu_cva_w_provider =  new Cesium.WebMapTileServiceImageryProvider({
+        url: "http://t0.tianditu.com/cva_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cva&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=93d1fdef41f93d2211deed6d22780c48",
+        layer: "tdtCvaBasicLayer",
+        style: "default",
+        format: "image/jpeg",
+        tileMatrixSetID: "GoogleMapsCompatible",
+        show: false
+    });
+    var layer_cva_w = new Cesium.ImageryLayer(tianditu_cva_w_provider);
+
+    viewer.imageryLayers.add(layer_vec_w);
+    viewer.imageryLayers.add(layer_cva_w);
+
+//    var TooltipDiv = (function () {
+//        var isInit =false;
+//
+//        function tooltip() {};
+//
+//        tooltip.initTool =function (frameDiv) {
+//            if(isInit) { return; }
+//
+//            var div = document.createElement('DIV');
+//            div.className= "tooltipdiv";
+//            div.id = 'tooltip';
+//
+//            var title = document.createElement('DIV');
+//            title.className= "tooltipdiv-inner";
+//            div.appendChild(title);
+//
+//            this._div= div;
+//            this._title= title;
+//
+//            frameDiv.appendChild(div);
+//
+//            isInit= true;
+//        };
+//
+//        tooltip.setVisible =function (visible) {
+//            if(!isInit) { return; }
+//            this._div.style.display= visible ? 'block' : 'none';
+//        };
+//
+//
+//        tooltip.showAt =function (position, message) {
+//            if(!isInit) { return; }
+//            if(position && message) {
+//                this.setVisible(true);
+//                this._title.innerHTML= message;
+//                this._div.style.left= position.x + 10 + "px";
+//                this._div.style.top= (position.y - this._div.clientHeight / 2) + "px";
+//            }
+//        };
+//
+//        return tooltip;
+//    })();
+//    TooltipDiv.initTool(viewer.cesiumWidget.container);
+    //绘制点
+    window.draw_point = function () {
+        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+//        handler.setInputAction(function (movement) {
+//            tooltip.style.left = movement.endPosition.x + 10 + "px";
+//            tooltip.style.top = movement.endPosition.y + 20 + "px";
+//        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        handler.setInputAction(function (movement) {
+            var position = viewer.camera.pickEllipsoid(movement.position, viewer.scene.globe.ellipsoid);
+            let point = drawPoint(position);
+//            tempEntities.push(point);
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        handler.setInputAction(function () {
+            handler.destroy();//关闭事件句柄
+            handler = null;
+        }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+        handler.setInputAction(function () {
+            handler.destroy();//关闭事件句柄
+            handler = null;
+        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+    }
+    function drawPoint(position, config) {
+        var config = config ? config : {};
+        var pointGeometry = viewer.entities.add({
+            name: "点几何对象",
+            position: position,
+            point: {
+                color: Cesium.Color.SKYBLUE,
+                pixelSize: 10,
+                outlineColor: Cesium.Color.YELLOW,
+                outlineWidth: 3,
+                disableDepthTestDistance: Number.POSITIVE_INFINITY
+            }
+        });
+        return pointGeometry;
+    };
+
+    //绘制线
+    window.draw_line = function () {
+        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        var tempPoints = [];
+        var tempEntities = [];
+        //鼠标移动事件
+//        handler.setInputAction(function (movement) {
+//            tooltip.style.left = movement.endPosition.x + 10 + "px";
+//            tooltip.style.top = movement.endPosition.y + 20 + "px";
+//        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        //左键点击操作
+        handler.setInputAction(function (click) {
+            //调用获取位置信息的接口
+            var position = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
+            tempPoints.push(position);
+            let tempLength = tempPoints.length;
+            //调用绘制点的接口
+            let point = drawPoint(tempPoints[tempPoints.length - 1]);
+            tempEntities.push(point);
+            if (tempLength > 1) {
+                let pointline = drawPolyline([tempPoints[tempPoints.length - 2], tempPoints[tempPoints.length - 1]]);
+                tempEntities.push(pointline);
+            }
+            else {
+//                tooltip.innerHTML = "请绘制下一个点，右键结束";
+            }
+            return;
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        //右键点击操作
+        handler.setInputAction(function (click) {
+//            tooltip.style.display = "none";
+//            tooltip.innerHTML = "左键单击绘制,右键结束绘制";
+            tempPoints = [];
+            handler.destroy();//关闭事件句柄
+            handler = null;
+        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+    }
+    function drawPolyline(positions, config) {
+        if (positions.length < 1) return;
+        var config = config ? config : {};
+        var polylineGeometry = viewer.entities.add({
+            name: "线几何对象",
+            polyline: {
+                positions: positions,
+                width: config.width ? config.width : 5.0,
+                material: new Cesium.PolylineGlowMaterialProperty({
+                    color: config.color ? new Cesium.Color.fromCssColorString(config.color) : Cesium.Color.GOLD,
+                }),
+                depthFailMaterial: new Cesium.PolylineGlowMaterialProperty({
+                    color: config.color ? new Cesium.Color.fromCssColorString(config.color) : Cesium.Color.GOLD,
+                }),
+            }
+        });
+        return polylineGeometry;
+    };
+
+    //绘制面
+    window.draw_polygon = function () {
+        var tempPoints = [];
+        var tempEntities = [];
+        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+//        tooltip.style.display = "block";
+//        //鼠标移动事件
+//        handler.setInputAction(function (movement) {
+//            tooltip.style.left = movement.endPosition.x + 10 + "px";
+//            tooltip.style.top = movement.endPosition.y + 20 + "px";
+//        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        //左键点击操作
+        handler.setInputAction(function (click) {
+            //调用获取位置信息的接口
+            position = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
+            tempPoints.push(position);
+            let tempLength = tempPoints.length;
+            //调用绘制点的接口
+            let point = drawPoint(position);
+            tempEntities.push(point);
+            if (tempLength > 1) {
+                let pointline = drawPolyline([tempPoints[tempPoints.length - 2], tempPoints[tempPoints.length - 1]]);
+                tempEntities.push(pointline);
+            } else {
+//                tooltip.innerHTML = "请绘制下一个点，右键结束";
+            }
+            return;
+
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        //右键点击操作
+        handler.setInputAction(function (click) {
+            let cartesian = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
+            if (cartesian) {
+                let tempLength = tempPoints.length;
+                if (tempLength < 3) {
+                    alert('请选择3个以上的点再执行闭合操作命令');
+                } else {
+                    //闭合最后一条线
+                    let pointline = drawPolyline([tempPoints[tempPoints.length - 1], tempPoints[0]]);
+                    tempEntities.push(pointline);
+                    drawPolygon(tempPoints);
+                    tempEntities.push(tempPoints);
+                    handler.destroy();//关闭事件句柄
+                    handler = null;
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+    }
+    function drawPolygon(positions, config) {
+        if (positions.length < 2) return;
+        var polygonGeometry = viewer.entities.add({
+            name: "线几何对象",
+            polygon: {
+                height: 0,
+                hierarchy: new Cesium.PolygonHierarchy(positions),
+                material: Cesium.Color.RED.withAlpha(0.5),
+//                perPositionHeight: true,//释放报错，预判显卡不支持
+                outline : true,//几何轮廓存在
+                outlineColor : Cesium.Color.WHITE//设置轮廓颜色为黑色
+            }
+        });
+        console.log(polygonGeometry);
+        return polygonGeometry;
+    };
+</script>
+</body>
+
+</html>

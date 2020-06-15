@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>cesium_test_tianditu</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="./Cesium/Widgets/widgets.css">
+    <script type="text/javascript" src="./Cesium/Cesium.js"></script>
+<body>
+    <div id="viewer" style="width:100%;height:100%"></div>
+
+    <script type="text/javascript">
+
+        console.log(window);
+        var viewer = new Cesium.Viewer(document.getElementById('viewer'), {
+            imageryProvider: false,
+            baseLayerPicker: false,
+            timeline: false,
+            infoBox: false,
+            navigationHelpButton: false,
+            fullscreenButton: false,
+            animation: false,
+            geocoder: false,
+            homeButton: false,
+            sceneModePicker: false
+
+        });
+
+
+        var tianditu_vec_w_provider =  new Cesium.WebMapTileServiceImageryProvider({
+            url: "http://t0.tianditu.com/vec_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=vec&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=93d1fdef41f93d2211deed6d22780c48",
+            layer: "tdtVecBasicLayer",
+            style: "default",
+            format: "image/jpeg",
+            tileMatrixSetID: "GoogleMapsCompatible",
+            show: false
+        });
+        var layer_vec_w = new Cesium.ImageryLayer(tianditu_vec_w_provider);
+        var tianditu_cva_w_provider =  new Cesium.WebMapTileServiceImageryProvider({
+            url: "http://t0.tianditu.com/cva_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cva&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=93d1fdef41f93d2211deed6d22780c48",
+            layer: "tdtCvaBasicLayer",
+            style: "default",
+            format: "image/jpeg",
+            tileMatrixSetID: "GoogleMapsCompatible",
+            show: false
+        });
+        var layer_cva_w = new Cesium.ImageryLayer(tianditu_cva_w_provider);
+
+        viewer.imageryLayers.add(layer_vec_w);
+        viewer.imageryLayers.add(layer_cva_w)
+    </script>
+</body>
+
+</html>

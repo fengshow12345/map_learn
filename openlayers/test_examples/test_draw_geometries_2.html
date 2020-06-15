@@ -1,0 +1,69 @@
+<html>
+<head>
+    <title>ol_图形绘制_多种图形</title>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/build/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/css/ol.css">
+</head>
+<body>
+<div id="map">
+    <div id="menu" >
+        <label>几何图形类型：&nbsp;</label>
+        <select id="type">
+            <option value="None">无</option>
+            <option value="Point">点</option>
+            <option value="LineString">线</option>
+            <option value="Polygon">多边形</option>
+            <option value="Circle">圆</option>
+        </select>
+    </div>
+</div>
+
+<script type="text/javascript">
+    //实例化Map对象，用于加载地图
+    var map = new ol.Map({
+        target: 'map', //地图容器div的id
+        //设置在地图容器中加载图层
+        layers: [
+            //加载瓦片图层
+            new ol.layer.Tile({
+                //图层对应的数据源，这里为加载OpenStreetMap在线瓦片服务数据
+                source: new ol.source.OSM()
+            })
+        ],
+        //地图视图设置
+        view: new ol.View({
+            center: [32, 113], //地图显示的初始中心
+            zoom: 2 //地图初始显示的级别
+        })
+    });
+    // 添加一个绘制线的线使用的layer
+    var drawLayer = new ol.layer.Vector({
+        source: new ol.source.Vector()
+    });
+    map.addLayer(drawLayer);
+
+    //类型选择判断
+    var typeSelect = document.getElementById('type');
+    var draw;//定义全局变量，方便后期去除
+    function addInteraction () {
+        var value = typeSelect.value;
+        if (value !== 'None') {
+            draw = new ol.interaction.Draw({
+                source: drawLayer.getSource(),
+                type: typeSelect.value
+            });
+            map.addInteraction(draw);
+        }
+    }
+    //监听类型选择变化
+    typeSelect.onchange = function () {
+        //先移除上一个interaction
+        map.removeInteraction(draw);
+        //绘制新的interaction
+        addInteraction();
+    }
+    addInteraction();
+</script>
+
+</body>
+</html>

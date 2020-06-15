@@ -1,0 +1,57 @@
+<html>
+<head>
+    <title>ol_图层添加_天地图</title>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/build/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/css/ol.css">
+</head>
+<body>
+<div id="map">
+</div>
+
+<script type="text/javascript">
+    //实例化Map对象，用于加载地图
+    var map = new ol.Map({
+        target: 'map', //地图容器div的id
+        //设置在地图容器中加载图层
+//        layers: [
+//            //加载瓦片图层
+//            new ol.layer.Tile({
+//                //图层对应的数据源，这里为加载OpenStreetMap在线瓦片服务数据
+//                source: new ol.source.OSM()
+//            })
+//        ],
+        //地图视图设置
+        view: new ol.View({
+            projection: "EPSG:4326", //wgs84坐标系,(地图的一种坐标系)
+            center: [116.3901, 39.9068], //地图显示的初始中心
+            zoom: 12 //地图初始显示的级别
+        })
+    });
+
+    var tianditu_road_layer = new ol.layer.Tile({
+        title: '天地图路网',
+        source: new ol.source.XYZ({
+            url: 'http://t0.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=7eb7ccd11f246ffbbe1b276ebb8f603d'
+        })
+    });
+    map.addLayer(tianditu_road_layer);
+    var tianditu_annotation_layer = new ol.layer.Tile({
+        title: '天地图标注',
+        source: new ol.source.XYZ({
+            url: 'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=7eb7ccd11f246ffbbe1b276ebb8f603d'
+        })
+    });
+    map.addLayer(tianditu_annotation_layer);
+    //添加鼠标定位控件
+    map.addControl(new ol.control.MousePosition({
+                undefinedHTML: 'outside',
+                projection: 'EPSG:4326',
+                coordinateFormat: function(coordinate) {
+                    return ol.coordinate.format(coordinate, '{x}, {y}', 4);
+                }
+            })
+    );
+</script>
+
+</body>
+</html>
